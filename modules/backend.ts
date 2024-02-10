@@ -53,3 +53,23 @@ export async function refreshToken(token: string) {
         throw new Error("We ran into an unexpected error, please try again later.")
     }
 }
+
+export async function getAccount(token: string) {
+    const response = await fetch (ENDPOINT + "/auth/account", {
+        method: "GET",
+        headers: {
+            "Authorization": `Bearer ${token}`,
+            "Content-Type": "application/json"
+        }
+    })
+
+    if (response.ok) {
+        return await response.json()
+    } else if (response.status == 401) {
+        throw new Error("Unauthorized.")
+    } else if (response.status == 404) {
+        throw new Error("User not found.")
+    } else {
+        throw new Error("We ran into an unexpected error, please try again later.")
+    }
+}

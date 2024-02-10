@@ -2,8 +2,8 @@
 
 import { signup } from "@/modules/backend";
 import { validEmail } from "@/modules/email-validator";
-import { setCookie } from "cookies-next";
 import Link from "next/link"
+import { useRouter } from 'next/navigation';
 import { useState } from "react"
 
 export default function Page() {
@@ -27,6 +27,7 @@ export default function Page() {
     })
     const [showingPassword, setShowingPassword] = useState(false)
     const [errorMessage, setErrorMessage] = useState("")
+    const router = useRouter()
 
     function handleChange(event: React.ChangeEvent<HTMLInputElement>) {
         const { name, value } = event.target;
@@ -173,14 +174,12 @@ export default function Page() {
 
         try {
             let response = await signup(form.username.value, form.email.value, form.password.value)
-            console.log( await response)
-            
-            setCookie("jwt", await response.token, { 
-                httpOnly: true, 
-                secure: true, 
-                expires: new Date(Date.now() + 1000 /*sec*/ * 60 /*min*/ * 60 /*hour*/ * 24 /*day*/ * 7)
-            })
 
+            const expirationDate = new Date(Date.now() + 1000 /*sec*/ * 60 /*min*/ * 60 /*hour*/ * 24 /*day*/ * 7)
+
+            document.cookie = `jwt=${await response.token}; expires=${expirationDate.toUTCString()}; SameSite=None; Secure;`;
+
+            router.push("/account")
         } catch (error) {
             if (error instanceof Error) {
                 setErrorMessage(error.message)

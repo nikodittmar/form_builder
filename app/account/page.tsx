@@ -1,27 +1,34 @@
-"use client"
+import { getAccount } from "@/modules/backend"
+import { redirect } from "next/navigation"
+import { cookies } from "next/headers"
 
-import { refreshToken } from "@/modules/backend"
-import { getCookie, hasCookie } from "cookies-next"
+async function getUser() {
+    const cookieStore = cookies()
+    const jwt = cookieStore.get("jwt")
 
-export default function Page() {
-
-    async function handlePress() {
-        try {
-            console.log(hasCookie("jwt"))
-            const token: string = getCookie("jwt") as string
-            const newToken = await refreshToken(token)
-            console.log(await newToken)
-
-        } catch (error) {
-            if (error instanceof Error) {
-                console.log(error.message)
-            }
-        }
+    if (jwt == null) {
+        return undefined
     }
 
+    try {
+        return await getAccount(jwt?.value)
+    } catch {
+        return undefined
+    }
+}
+
+export default async function Page() {
+    const user = await getUser()
+
+    if (!user) {
+        redirect('/login')
+    }
+    
     return (
     <div>
-        <button className="btn btn-primary" onClick={handlePress}>Refresh Token</button>
+        <h1>My Account</h1>
+        <p>Username: {user.username}</p>
+        <p>Email: {user.email}</p>
     </div>
     )
 }
