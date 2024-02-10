@@ -1,6 +1,8 @@
 'use client'
 
+import { signup } from "@/modules/backend";
 import { validEmail } from "@/modules/email-validator";
+import { setCookie } from "cookies-next";
 import Link from "next/link"
 import { useState } from "react"
 
@@ -24,6 +26,7 @@ export default function Page() {
         },
     })
     const [showingPassword, setShowingPassword] = useState(false)
+    const [errorMessage, setErrorMessage] = useState("")
 
     function handleChange(event: React.ChangeEvent<HTMLInputElement>) {
         const { name, value } = event.target;
@@ -165,10 +168,33 @@ export default function Page() {
         }
     }
 
+    async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
+        event.preventDefault()
+
+        try {
+            let response = await signup(form.username.value, form.email.value, form.password.value)
+            console.log( await response)
+            
+            setCookie("jwt", await response.token, { 
+                httpOnly: true, 
+                secure: true, 
+                expires: new Date(Date.now() + 1000 /*sec*/ * 60 /*min*/ * 60 /*hour*/ * 24 /*day*/ * 7)
+            })
+
+        } catch (error) {
+            if (error instanceof Error) {
+                setErrorMessage(error.message)
+            }
+        }
+    }
+
     return (
     <div className="mx-auto p-2 mt-3" style={{maxWidth: 500}}>
         <h1>Sign Up</h1>
-        <form className="my-3" autoComplete="off">
+        <div className="alert alert-danger mt-3" hidden={errorMessage.length === 0} role="alert">
+            {errorMessage}
+        </div>
+        <form className="my-3" autoComplete="off" onSubmit={handleSubmit}>
             <div className="mb-3">
                 <label className="form-label">Username</label>
                 <input 
