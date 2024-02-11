@@ -20,15 +20,25 @@ async function getUser() {
 export default async function Page() {
     const user = await getUser()
 
+    /*
     if (!user) {
         redirect('/login')
     }
-    
+    */
+
+    async function handleSignOut() {
+        'use server'
+        cookies().delete('jwt')
+    }
+
     return (
-    <div>
+    <div className="mx-auto p-2 mt-3" style={{maxWidth: 500}}>
         <h1>My Account</h1>
-        <p>Username: {user.username}</p>
-        <p>Email: {user.email}</p>
+        <p>Username: {user?.username}</p>
+        <p>Email: {user?.email}</p>
+        <form action={handleSignOut}>
+            <button className="btn btn-primary" type="submit">Sign Out</button>
+        </form>
     </div>
     )
 }

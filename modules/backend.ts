@@ -31,7 +31,16 @@ export async function login(identifier: String, password: String) {
             "Content-Type": "application/json"
         }
     })
-    console.log(await response.json())
+    
+    if (response.ok) {
+        return await response.json()
+    } else {
+        if (response.status == 404 || response.status == 401) {
+            throw new Error("Incorrect username or password.")
+        } else {
+            throw new Error("We ran into an unexpected error, please try again later.")
+        }
+    } 
 }
 
 export async function refreshToken(token: string) {

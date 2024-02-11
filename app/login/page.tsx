@@ -1,6 +1,8 @@
 'use client'
 
+import { login } from "@/modules/backend"
 import Link from "next/link"
+import { useRouter } from "next/navigation"
 import { useState } from "react"
 
 export default function Page() {
@@ -15,6 +17,8 @@ export default function Page() {
         }
     })
     const [showingPassword, setShowingPassword] = useState(false)
+    const [errorMessage, setErrorMessage] = useState("")
+    const router = useRouter()
 
     function handleChange(event: React.ChangeEvent<HTMLInputElement>) {
         const { name, value } = event.target;
@@ -38,10 +42,31 @@ export default function Page() {
         return (form.usernameOrEmail.value.length === 0 || form.password.value.length === 0)
     }
 
+    async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
+        event.preventDefault()
+
+        try {
+            let response = await login(form.usernameOrEmail.value, form.password.value)
+
+            const expirationDate = new Date(Date.now() + 1000 /*sec*/ * 60 /*min*/ * 60 /*hour*/ * 24 /*day*/ * 7)
+
+            document.cookie = `jwt=${await response.token}; expires=${expirationDate.toUTCString()}; SameSite=None; Secure;`;
+            
+            router.push("/account")
+        } catch (error) {
+            if (error instanceof Error) {
+                setErrorMessage(error.message)
+            }
+        }
+    }
+
     return (
     <div className="mx-auto p-2 mt-3" style={{maxWidth: 500}}>
         <h1>Log In</h1>
-        <form className="my-3">
+        <div className="alert alert-danger mt-3" hidden={errorMessage.length === 0} role="alert">
+            {errorMessage}
+        </div>
+        <form className="my-3" onSubmit={handleSubmit}>
             <div className="mb-3">
                 <label className="form-label">Username or Email</label>
                 <input 
